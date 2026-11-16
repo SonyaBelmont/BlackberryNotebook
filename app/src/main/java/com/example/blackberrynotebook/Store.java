@@ -77,6 +77,16 @@ public class Store extends SQLiteOpenHelper {
         return n.id;
     }
 
+    void deleteNote(long id){
+        SQLiteDatabase db=getWritableDatabase();
+        db.beginTransaction();
+        try{
+            db.delete("photos","note_id=?",new String[]{String.valueOf(id)});
+            db.delete("notes","id=?",new String[]{String.valueOf(id)});
+            db.setTransactionSuccessful();
+        } finally {db.endTransaction();}
+    }
+
     void addPhoto(long id,String name){
         ContentValues v=new ContentValues();v.put("note_id",id);v.put("filename",name);getWritableDatabase().insert("photos",null,v);
     }

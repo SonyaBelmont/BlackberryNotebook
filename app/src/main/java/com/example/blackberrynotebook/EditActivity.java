@@ -13,6 +13,7 @@ import java.io.*;
 
 public class EditActivity extends Activity {
     private static final int PICK=100;
+    private boolean deleted=false;
     Store store; Store.Note note; EditText body; TextView whenNeed,people,alarm; LinearLayout images; TextView saveBtn; TextView stateText;
 
     @Override public void onCreate(Bundle b){
@@ -84,6 +85,7 @@ public class EditActivity extends Activity {
     void showNoteMenu(View anchor){
         PopupMenu menu=new PopupMenu(this,anchor);
         menu.getMenu().add(0,1,0,note.done?"Вернуть в работу":"Отметить как сделано");
+        menu.getMenu().add(0,2,1,"Удалить заметку");
         menu.setOnMenuItemClickListener(item->{
             if(item.getItemId()==1){
                 note.done=!note.done;
@@ -91,9 +93,34 @@ public class EditActivity extends Activity {
                 persist();
                 return true;
             }
+            if(item.getItemId()==2){
+                confirmDelete();
+                return true;
+            }
             return false;
         });
         menu.show();
+    }
+
+    void confirmDelete(){
+        if(note.id==0){deleted=true;finish();return;}
+        new AlertDialog.Builder(this)
+            .setTitle("Удалить заметку?")
+            .setMessage("Заметка и её фотографии будут удалены без возможности восстановления.")
+            .setNegativeButton("Отмена",null)
+            .setPositiveButton("Удалить",(dialog,which)->{
+                // Block onPause from saving the just-deleted note again.
+                deleted=true;
+                AlarmManager manager=(AlarmManager)getSystemService(ALARM_SERVICE);
+                if(manager!=null) manager.cancel(ReminderReceiver.pending(this,note.id));
+                java.util.List<String> photos=store.photos(note.id);
+                store.deleteNote(note.id);
+                for(String name:photos){
+                    File picture=new File(getFilesDir(),name);
+                    if(picture.isFile()) picture.delete();
+                }
+                finish();
+            }).show();
     }
 
     TextView field(LinearLayout parent,String label,Runnable action){
@@ -222,7 +249,7 @@ public class EditActivity extends Activity {
     }
 
     void persist(){
-        if(body==null)return;
+        if(deleted || body==null)return;
         note.body=body.getText().toString();
         if(note.id==0 && note.body.trim().isEmpty()) return;
         store.save(note);
