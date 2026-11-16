@@ -27,11 +27,11 @@ public class Store extends SQLiteOpenHelper {
     List<Note> list(String query) {
         List<Note> out=new ArrayList<>();
         String search="%"+query+"%";
-        try(Cursor c=getReadableDatabase().rawQuery("SELECT * FROM notes WHERE body LIKE ? OR people LIKE ? OR alarm_comment LIKE ? ORDER BY created DESC,id DESC",new String[]{search,search,search}))){while(c.moveToNext())out.add(parse(c));}
+        try(Cursor c=getReadableDatabase().rawQuery("SELECT * FROM notes WHERE body LIKE ? OR people LIKE ? OR alarm_comment LIKE ? ORDER BY created DESC,id DESC",new String[]{search,search,search})){while(c.moveToNext())out.add(parse(c));}
         return out;
     }
     Note find(long id) {
-        try(Cursor c=getReadableDatabase().rawQuery("SELECT * FROM notes WHERE id=?",new String[]{String.valueOf(id)}))){return c.moveToFirst()?parse(c):null;}
+        try(Cursor c=getReadableDatabase().rawQuery("SELECT * FROM notes WHERE id=?",new String[]{String.valueOf(id)})){return c.moveToFirst()?parse(c):null;}
     }
     long save(Note n){
         ContentValues v=new ContentValues(); v.put("body",n.body);v.put("created",n.created);v.put("done",n.done?1:0);
@@ -41,5 +41,5 @@ public class Store extends SQLiteOpenHelper {
         return n.id;
     }
     void addPhoto(long id,String name){ContentValues v=new ContentValues();v.put("note_id",id);v.put("filename",name);getWritableDatabase().insert("photos",null,v);}
-    List<String> photos(long id){List<String> out=new ArrayList<>();try(Cursor c=getReadableDatabase().rawQuery("SELECT filename FROM photos WHERE note_id=? ORDER BY id",new String[]{String.valueOf(id)}))){while(c.moveToNext())out.add(c.getString(0));}return out;}
+    List<String> photos(long id){List<String> out=new ArrayList<>();try(Cursor c=getReadableDatabase().rawQuery("SELECT filename FROM photos WHERE note_id=? ORDER BY id",new String[]{String.valueOf(id)})){while(c.moveToNext())out.add(c.getString(0));}return out;}
 }
